@@ -2,14 +2,15 @@
 
 /* DRAWBUFFERS:0124 */
 
-#define POM
+/*#define POM
 #define POM_MAP_RES 128.0
 #define POM_DEPTH (1.0/16.0)
+**/
 
 /* Here, intervalMult might need to be tweaked per texture pack.  
    The first two numbers determine how many samples are taken per fragment.  They should always be the equal to eachother.
    The third number divided by one of the first two numbers is inversely proportional to the range of the height-map. */
-const vec3 intervalMult = vec3(1.0/16/POM_MAP_RES, 1.0/16/POM_MAP_RES, 1.0/POM_MAP_RES/POM_DEPTH); 
+//const vec3 intervalMult = vec3(1.0/16/POM_MAP_RES, 1.0/16/POM_MAP_RES, 1.0/POM_MAP_RES/POM_DEPTH); 
 
 uniform sampler2D texture;
 uniform sampler2D lightmap;
@@ -45,35 +46,6 @@ void main() {
 
 	vec2 adjustedTexCoord = texcoord.st;
 	vec3 ambient = texture2D(lightmap, vec2(lmcoord.s,0.5/16.)).rgb + texture2D(lightmap, vec2(0.5/16., lmcoord.t)).rgb * 0.6;
-
-#ifdef POM
-	if (distance <= MAX_OCCLUSION_DISTANCE && viewVector.z < 0.0) {
-		vec3 coord = vec3(texcoord.st, 1.0);
-
-		if (texture2D(normals, coord.st).a < 1.0) {
-			vec2 minCoord = vec2(texcoord.s - mod(texcoord.s, 0.0625), texcoord.t - mod(texcoord.t, 0.0625));
-			vec2 maxCoord = vec2(minCoord.s + 0.0625, minCoord.t + 0.0625);
-		
-			vec3 interval = viewVector * intervalMult;
-
-			for (int loopCount = 0; texture2D(normals, coord.st).a < coord.z && loopCount < MAX_OCCLUSION_POINTS; ++loopCount) {
-				coord += interval;
-				if (coord.s < minCoord.s) {
-					coord.s += 0.0625/4;
-				} else if (coord.s >= maxCoord.s) {
-					coord.s -= 0.0625/4;
-				}
-				if (coord.t < minCoord.t) {
-					coord.t += 0.0625/4;
-				} else if (coord.t >= maxCoord.t) {
-					coord.t -= 0.0625/4;
-				}
-			}
-		}
-
-		adjustedTexCoord = coord.st;
-	}
-#endif
 
 	vec4 diffuse = texture2D(texture, adjustedTexCoord.st) * color;
 	
